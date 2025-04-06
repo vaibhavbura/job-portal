@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import JobListing from '../components/JobListing'
 import JobCard from '../components/JobCard'
+import Footer from '../components/Footer'
 
 const Home = () => {
   return (
@@ -11,6 +12,7 @@ const Home = () => {
         <Hero></Hero>
         <JobListing></JobListing>
         <JobCard></JobCard>
+        <Footer></Footer>
     </div>
   )
 }
