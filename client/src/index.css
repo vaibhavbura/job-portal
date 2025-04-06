@@ -7,3 +7,44 @@
 *{
     font-family:Poppins;
 }
+
+.rich-text{
+    font-size:15px;
+    color:#7A7B7D;
+}
+
+.rich-text p{
+    margin-bottom:16px;
+}
+
+.rich-text h1{
+    font-size:15px;
+}
+
+.rich-text li{
+    margin-bottom:8px;
+}
+
+.rich-text ul{
+    margin-left:30px;
+    list-style-type:disc;
+}
+
+.rich-text ol{
+    margin-left :30px;
+    list-style-type:decimal;
+}
+
+.rich-text strong{
+    font-weight:700;
+}
+
+@layer base{
+    html{
+        scroll-behavior:smooth;
+    }
+}
+
+::-webkit-scrollbar{
+    display:none;
+}
