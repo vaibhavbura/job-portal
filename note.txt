@@ -1,0 +1,3 @@
+mongodb
+username=developer
+password=s0Xq0e3VQ5j8FZrX

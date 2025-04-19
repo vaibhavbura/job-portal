@@ -1,0 +1,6 @@
+npm install dotenv
+npm install express
+npm i cors multer dotenv cloudinary
+npm i mongoose nodemon svix@1.42.0 
+npm i bcrypt 
+npm init -y    
