@@ -38,7 +38,7 @@ const clerkWebhooks = async (req, res) => {
     switch (type) {
       case "user.created": {
         const userData = {
-          _id: data.id,
+          clerkId: data.id,
           email: data.email_addresses[0].email_address,
           name: data.first_name + " " + data.last_name,
           image: data.image_url,
@@ -67,7 +67,11 @@ const clerkWebhooks = async (req, res) => {
         };
         console.log('Attempting to update user:', data.id, 'with data:', userData);
         try {
-          const updatedUser = await User.findByIdAndUpdate(data.id, userData, { new: true });
+          const updatedUser = await User.findOneAndUpdate(
+            { clerkId: data.id },
+            userData,
+            { new: true }
+          );
           console.log('User updated successfully in MongoDB:', updatedUser);
           return res.json({ success: true, user: updatedUser });
         } catch (dbError) {
@@ -83,7 +87,7 @@ const clerkWebhooks = async (req, res) => {
       case "user.deleted": {
         console.log('Attempting to delete user:', data.id);
         try {
-          const deletedUser = await User.findByIdAndDelete(data.id);
+          const deletedUser = await User.findOneAndDelete({ clerkId: data.id });
           console.log('User deleted successfully from MongoDB:', deletedUser);
           return res.json({ success: true, user: deletedUser });
         } catch (dbError) {

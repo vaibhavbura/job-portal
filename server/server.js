@@ -5,6 +5,7 @@ import 'dotenv/config'
 import connectDB from './config/db.js'
 import * as Sentry from "@sentry/node";
 import {clerkWebhooks} from './controllers/webhooks.js'
+import User from './models/User.js'
 
 //Initialize Express
 const app = express()
@@ -26,6 +27,41 @@ app.use((req, res, next) => {
         res.status(504).json({ success: false, message: "Request timeout" });
     });
     next();
+});
+
+// Test endpoint to verify MongoDB connection and user creation
+app.post('/test-user', async (req, res) => {
+    try {
+        console.log('=== Testing User Creation ===');
+        const testUser = {
+            clerkId: 'test_' + Date.now(),
+            name: 'Test User',
+            email: 'test@example.com',
+            image: 'https://example.com/image.jpg',
+            resume: ''
+        };
+        
+        console.log('Creating test user:', testUser);
+        const createdUser = await User.create(testUser);
+        console.log('Test user created:', createdUser);
+        
+        // Verify user exists in database
+        const foundUser = await User.findOne({ clerkId: testUser.clerkId });
+        console.log('Found user in database:', foundUser);
+        
+        res.json({ 
+            success: true, 
+            message: 'Test user created successfully',
+            user: createdUser
+        });
+    } catch (error) {
+        console.error('Test user creation failed:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Test user creation failed',
+            error: error.message
+        });
+    }
 });
 
 //Routes
