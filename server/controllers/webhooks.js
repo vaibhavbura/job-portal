@@ -5,8 +5,9 @@ import User from "../models/User.js";
 const clerkWebhooks = async (req, res) => {
   try {
     console.log('=== Webhook Request Received ===');
-    console.log('Headers:', req.headers);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
     console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Webhook Secret:', process.env.CLERK_WEBHOOK_SECRET ? 'Present' : 'Missing');
 
     // Set timeout for the entire operation
     res.setTimeout(8000, () => {
@@ -14,7 +15,6 @@ const clerkWebhooks = async (req, res) => {
     });
 
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    console.log('Webhook secret configured:', process.env.CLERK_WEBHOOK_SECRET ? 'Yes' : 'No');
 
     try {
       await whook.verify(JSON.stringify(req.body), {
@@ -46,8 +46,20 @@ const clerkWebhooks = async (req, res) => {
         };
         console.log('Attempting to create user with data:', userData);
         try {
+          // Check if user already exists
+          const existingUser = await User.findOne({ clerkId: data.id });
+          if (existingUser) {
+            console.log('User already exists:', existingUser);
+            return res.json({ success: true, message: 'User already exists', user: existingUser });
+          }
+
           const createdUser = await User.create(userData);
           console.log('User created successfully in MongoDB:', createdUser);
+          
+          // Verify the user was actually saved
+          const verifiedUser = await User.findOne({ clerkId: data.id });
+          console.log('Verified user in database:', verifiedUser);
+          
           return res.json({ success: true, user: createdUser });
         } catch (dbError) {
           console.error('Database error during user creation:', dbError);
@@ -72,6 +84,13 @@ const clerkWebhooks = async (req, res) => {
             userData,
             { new: true }
           );
+          if (!updatedUser) {
+            console.log('User not found for update:', data.id);
+            return res.status(404).json({ 
+              success: false, 
+              message: "User not found" 
+            });
+          }
           console.log('User updated successfully in MongoDB:', updatedUser);
           return res.json({ success: true, user: updatedUser });
         } catch (dbError) {
@@ -88,6 +107,13 @@ const clerkWebhooks = async (req, res) => {
         console.log('Attempting to delete user:', data.id);
         try {
           const deletedUser = await User.findOneAndDelete({ clerkId: data.id });
+          if (!deletedUser) {
+            console.log('User not found for deletion:', data.id);
+            return res.status(404).json({ 
+              success: false, 
+              message: "User not found" 
+            });
+          }
           console.log('User deleted successfully from MongoDB:', deletedUser);
           return res.json({ success: true, user: deletedUser });
         } catch (dbError) {

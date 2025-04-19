@@ -29,8 +29,44 @@ app.use((req, res, next) => {
     next();
 });
 
+//Routes
+app.get('/', (req, res) => res.send("API Working"))
+app.get("/debug-sentry", function mainHandler(req, res) {
+    throw new Error("My first Sentry error!");
+});
+
+// Webhook route with detailed logging
+app.post('/api/webhooks', (req, res, next) => {
+    console.log('=== Webhook Request Received ===');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    next();
+}, clerkWebhooks);
+
+// Route to check all users in database
+app.get('/api/check-users', async (req, res) => {
+    try {
+        console.log('=== Checking All Users ===');
+        const users = await User.find({});
+        console.log('Found users:', users);
+        res.json({
+            success: true,
+            count: users.length,
+            users: users
+        });
+    } catch (error) {
+        console.error('Error checking users:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Test endpoint to verify MongoDB connection and user creation
-app.post('/test-user', async (req, res) => {
+app.post('/api/test-user', async (req, res) => {
     try {
         console.log('=== Testing User Creation ===');
         const testUser = {
@@ -63,20 +99,6 @@ app.post('/test-user', async (req, res) => {
         });
     }
 });
-
-//Routes
-app.get('/', (req, res) => res.send("API Working"))
-app.get("/debug-sentry", function mainHandler(req, res) {
-    throw new Error("My first Sentry error!");
-});
-
-app.post('/webhooks', (req, res, next) => {
-    console.log('Webhook received:', {
-        headers: req.headers,
-        body: req.body
-    });
-    next();
-}, clerkWebhooks)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
