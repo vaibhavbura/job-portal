@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const favicon = require('serve-favicon');
 
 // Load environment variables
 dotenv.config();
@@ -21,8 +22,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Serve static files
+// Serve static files and favicon
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
