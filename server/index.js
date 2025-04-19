@@ -23,7 +23,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static files and favicon
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 // MongoDB Connection
