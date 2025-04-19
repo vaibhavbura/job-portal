@@ -7,10 +7,15 @@ const connectDB = async () => {
         mongoose.connection.on('error', (err) => console.error('MongoDB connection error:', err));
         mongoose.connection.on('disconnected', () => console.log('MongoDB disconnected'));
 
-        await mongoose.connect(`${process.env.MONGODB_URI}/job-portal`, {
-            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-            socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+        const dbUri = `${process.env.MONGODB_URI}/job-portal`;
+        console.log('Connecting to MongoDB at:', dbUri);
+        
+        await mongoose.connect(dbUri, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
         });
+        
+        console.log('Successfully connected to MongoDB');
     } catch (error) {
         console.error('MongoDB connection error:', error);
         process.exit(1);

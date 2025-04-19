@@ -4,6 +4,8 @@ import User from "../models/User.js";
 // API Controller Function to manage clerk user with database
 const clerkWebhooks = async (req, res) => {
   try {
+    console.log('Received webhook request:', req.body);
+    
     // Set timeout for the entire operation
     res.setTimeout(8000, () => {
       res.status(504).json({ success: false, message: "Request timeout" });
@@ -18,6 +20,7 @@ const clerkWebhooks = async (req, res) => {
     });
 
     const { data, type } = req.body;
+    console.log('Processing webhook type:', type, 'for user:', data.id);
 
     // Use bulk operations where possible
     switch (type) {
@@ -29,7 +32,9 @@ const clerkWebhooks = async (req, res) => {
           image: data.image_url,
           resume: "",
         };
-        await User.create(userData);
+        console.log('Creating user:', userData);
+        const createdUser = await User.create(userData);
+        console.log('User created successfully:', createdUser);
         return res.json({ success: true });
       }
 
@@ -39,16 +44,21 @@ const clerkWebhooks = async (req, res) => {
           name: data.first_name + " " + data.last_name,
           image: data.image_url,
         };
-        await User.findByIdAndUpdate(data.id, userData, { new: true });
+        console.log('Updating user:', data.id, 'with data:', userData);
+        const updatedUser = await User.findByIdAndUpdate(data.id, userData, { new: true });
+        console.log('User updated successfully:', updatedUser);
         return res.json({ success: true });
       }
 
       case "user.deleted": {
-        await User.findByIdAndDelete(data.id);
+        console.log('Deleting user:', data.id);
+        const deletedUser = await User.findByIdAndDelete(data.id);
+        console.log('User deleted successfully:', deletedUser);
         return res.json({ success: true });
       }
 
       default:
+        console.log('Unhandled webhook type:', type);
         return res.json({ success: true });
     }
   } catch (error) {

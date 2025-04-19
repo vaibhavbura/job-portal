@@ -34,7 +34,13 @@ app.get("/debug-sentry", function mainHandler(req, res) {
     throw new Error("My first Sentry error!");
 });
 
-app.post('/webhhoks', clerkWebhooks)
+app.post('/webhooks', (req, res, next) => {
+    console.log('Webhook received:', {
+        headers: req.headers,
+        body: req.body
+    });
+    next();
+}, clerkWebhooks)
 
 // Error handling middleware
 app.use((err, req, res, next) => {
