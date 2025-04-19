@@ -4,6 +4,12 @@ import { NextResponse } from "next/server";
 import connectDB from "../../config/db";
 import User from "../../models/User";
 
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
+
 export async function POST(req) {
     try {
         console.log('=== Incoming Webhook Request ===');
