@@ -9,6 +9,10 @@ const clerkWebhooks = async (req, res) => {
     console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Webhook Secret:', process.env.CLERK_WEBHOOK_SECRET ? 'Present' : 'Missing');
 
+    if (!process.env.CLERK_WEBHOOK_SECRET) {
+      throw new Error('CLERK_WEBHOOK_SECRET is not configured');
+    }
+
     // Set timeout for the entire operation
     res.setTimeout(8000, () => {
       res.status(504).json({ success: false, message: "Request timeout" });
@@ -33,14 +37,22 @@ const clerkWebhooks = async (req, res) => {
     }
 
     const { data, type } = req.body;
+    if (!data || !type) {
+      throw new Error('Invalid webhook payload: missing data or type');
+    }
+
     console.log('Processing webhook type:', type, 'for user:', data.id);
 
     switch (type) {
       case "user.created": {
+        if (!data.email_addresses || !data.email_addresses[0]) {
+          throw new Error('Invalid user data: missing email address');
+        }
+
         const userData = {
           clerkId: data.id,
           email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
+          name: (data.first_name + " " + data.last_name).trim(),
           image: data.image_url,
           resume: "",
         };
@@ -72,9 +84,13 @@ const clerkWebhooks = async (req, res) => {
       }
 
       case "user.updated": {
+        if (!data.email_addresses || !data.email_addresses[0]) {
+          throw new Error('Invalid user data: missing email address');
+        }
+
         const userData = {
           email: data.email_addresses[0].email_address,
-          name: data.first_name + " " + data.last_name,
+          name: (data.first_name + " " + data.last_name).trim(),
           image: data.image_url,
         };
         console.log('Attempting to update user:', data.id, 'with data:', userData);

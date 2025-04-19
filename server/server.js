@@ -10,6 +10,15 @@ import User from './models/User.js'
 //Initialize Express
 const app = express()
 
+// Error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled Rejection:', error);
+});
+
 //Connect to database
 connectDB().catch(err => {
     console.error('Failed to connect to database:', err);
@@ -29,6 +38,18 @@ app.use((req, res, next) => {
     next();
 });
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log('=== Incoming Request ===');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    if (req.body) {
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+    }
+    next();
+});
+
 //Routes
 app.get('/', (req, res) => res.send("API Working"))
 app.get("/debug-sentry", function mainHandler(req, res) {
@@ -36,13 +57,19 @@ app.get("/debug-sentry", function mainHandler(req, res) {
 });
 
 // Webhook route with detailed logging
-app.post('/api/webhooks', (req, res, next) => {
-    console.log('=== Webhook Request Received ===');
-    console.log('Method:', req.method);
-    console.log('Path:', req.path);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-    next();
+app.post('/api/webhooks', async (req, res, next) => {
+    try {
+        console.log('=== Webhook Request Received ===');
+        console.log('Method:', req.method);
+        console.log('Path:', req.path);
+        console.log('Headers:', JSON.stringify(req.headers, null, 2));
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+        console.log('Webhook Secret Present:', !!process.env.CLERK_WEBHOOK_SECRET);
+        next();
+    } catch (error) {
+        console.error('Error in webhook middleware:', error);
+        next(error);
+    }
 }, clerkWebhooks);
 
 // Route to check all users in database
@@ -102,7 +129,9 @@ app.post('/api/test-user', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('=== Error Handler ===');
+    console.error('Error:', err);
+    console.error('Stack:', err.stack);
     res.status(500).json({ 
         success: false, 
         message: "Internal Server Error",
