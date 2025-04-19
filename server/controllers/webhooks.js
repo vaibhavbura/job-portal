@@ -4,6 +4,11 @@ import User from "../models/User.js";
 // API Controller Function to manage clerk user with database
 const clerkWebhooks = async (req, res) => {
   try {
+    // Set timeout for the entire operation
+    res.setTimeout(8000, () => {
+      res.status(504).json({ success: false, message: "Request timeout" });
+    });
+
     const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
 
     await whook.verify(JSON.stringify(req.body), {
@@ -14,6 +19,7 @@ const clerkWebhooks = async (req, res) => {
 
     const { data, type } = req.body;
 
+    // Use bulk operations where possible
     switch (type) {
       case "user.created": {
         const userData = {
@@ -24,8 +30,7 @@ const clerkWebhooks = async (req, res) => {
           resume: "",
         };
         await User.create(userData);
-        res.json({});
-        break;
+        return res.json({ success: true });
       }
 
       case "user.updated": {
@@ -34,23 +39,25 @@ const clerkWebhooks = async (req, res) => {
           name: data.first_name + " " + data.last_name,
           image: data.image_url,
         };
-        await User.findByIdAndUpdate(data.id, userData);
-        res.json({});
-        break;
+        await User.findByIdAndUpdate(data.id, userData, { new: true });
+        return res.json({ success: true });
       }
 
       case "user.deleted": {
         await User.findByIdAndDelete(data.id);
-        res.json({});
-        break;
+        return res.json({ success: true });
       }
 
       default:
-        break;
+        return res.json({ success: true });
     }
   } catch (error) {
-    console.log(error.message);
-    res.json({ success: false, message: "Webhook Error" });
+    console.error("Webhook Error:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Webhook Error",
+      error: error.message 
+    });
   }
 };
 
